@@ -16,6 +16,7 @@ Installation and setting
 ------------------------
 
 [PlannerFw installation](https://www.w3plan.net/plannerfw-installation/ "PlannerFw installation")
+
 [PlannerFw setting](https://www.w3plan.net/configuration-setting/ "PlannerFw setting")
 
 
