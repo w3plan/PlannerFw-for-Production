@@ -16,7 +16,8 @@
                                      a single quote ' character if ' characters were replaced
                                      by \u0027 and newline characters were removed from pfModelData                    
  */
-module.exports = function (pfTemplatePath, pfModelData, delimiter = '\`') {
+module.exports = function (pfTemplatePath, pfModelData, delimiter = '\`') 
+{
 return `<!DOCTYPE html>
 <html lang="en">
 <head>

@@ -61,7 +61,7 @@ function getTemplatesDev($public_tm, $tmpath, $content, $tmfile) {
     $fltval = filter_var($tmval, FILTER_VALIDATE_URL, FILTER_FLAG_HOST_REQUIRED);
     $components = parse_url ($tmval);
     if ($fltval && $components) {
-      if (in_array($components["host"], $trustedDomains)) {
+      if (in_array($components["host"], $GLOBALS['trustedDomains'])) {
         $tmval = trim($tmval, "/");
         
         //cross-origin template access
@@ -124,7 +124,7 @@ function getTemplates($private_tm, $public_tm, $tmpath, $content, $tmconn, $tmfi
     $fltval = filter_var($tmval, FILTER_VALIDATE_URL, FILTER_FLAG_HOST_REQUIRED);
     $components = parse_url($tmval);
     if ($fltval && $components && substr(basename($tmpath), 0, 4) !== "pvt-") {
-      if (in_array($components["host"], $trustedDomains)) {
+      if (in_array($components["host"], $GLOBALS['trustedDomains'])) {
         $tmval = trim($tmval, "/");
         
         //cross-origin template access

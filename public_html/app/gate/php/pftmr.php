@@ -19,7 +19,9 @@ $environment = "development";
  * 
  * Leave the array empty if there is no cross-origin template accesses, don't add the current domain to the array.
  */
-$trustedDomains = [];
+$trustedDomains = [
+                    'raw.githubusercontent.com'
+                  ];
 
 // TemplateFileRead class
 class TemplateFileRead {
