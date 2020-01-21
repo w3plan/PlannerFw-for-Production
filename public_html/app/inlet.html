@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <script src="/app/lib/planner-setting.js"></script>
+  <script src="/app/lib/planner.js"></script>
+  <script type="text/javascript">
+    var pfTemplatePath = "a template path";
+  </script>
+  
+  <script type="text/javascript">
+    /**
+     * use next line (remove //) if the template doesn't require modeldata
+     */
+    //var pfModelData = "";
+    
+    /**
+     * use next line (remove //) if $pfModelData is a JSON literal from web server
+     */
+    //var pfModelData = $pfModelData;
+    
+    /**
+     * use next line if $pfModelData is a string from web server and back quote ` could
+     * be ' if new line characters and ' characters in $pfModelData were escaped
+     * 
+     * Note: you should escape ' as \u0027
+     */
+    var pfModelData = `$pfModelData`;
+  </script>
+  
+  <script src="/app/index.js"></script>
+  <title>PlannerFw Inlet to connect existing website</title>
+</head>
+<body></body>
+</html>

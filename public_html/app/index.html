@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="application-name" content="PlannerFw">
+<meta name="description" content="PlannerFw is a template-path driven, universal content-presenting frontend framework. PlannerFw separates dynamic data from web presentation since the web server">
+<meta name="keywords" content="template-path driven, universal content-presenting, separating data from presentation, front-end framework">
+
+<title>Front-end controller</title>
+
+<!--
+  
+  Front-end controller for page mount
+  
+  Browser compatibilities
+  Chrome  Firefox  IE    Opera  Safari  iOS Safari  Android  Blackberry
+  5+      4+       9.0+  10.5+  4.0+    4.1+        2.1+     7+
+  
+  Author: W3plan Technologies <https://www.w3plan.net/>
+  Copyright 2015-2020 W3plan Technologies
+  Code licensed under the GNU GPLv3 license <http://www.gnu.org/licenses/gpl.html>
+  
+-->
+
+<!-- Apply PlannerFw Library -->
+<script src="/app/lib/planner-setting.js"></script>
+<script src="/app/lib/planner.js"></script>
+
+<!-- PlannerFw Controller -->
+<script>
+(function(){
+// checks PlannerFw library loading
+if (!window.planner) {
+  alert("Failed to load PlannerFw library");
+  return;
+}
+
+// sets top error handler
+window.onerror = function (errorMsg, file, line, col, error) {
+  planner.errorHandler(0, errorMsg, line);
+  pfTemplate = "";
+  pfIndex = null;
+};
+
+// checks environment support
+planner.checkEnvironment();
+
+if (pfConfig.defaultTemplate.length < 1) {
+  throw new Error("Assign your value to pfConfig.defaultTemplate");
+}
+
+var pfIndex = {};
+var pfTemplate = "";
+
+// starts tracking time
+if (pfConfig.trackExecutedTime) {
+  pfIndex.start = planner.startMeter();
+  planner.updateTrackTime(0);
+}
+
+/**
+ * The controller parses router and handle requests
+ */
+pfConfig.defaultTemplate = planner.adaptTemplatePath(pfConfig.defaultTemplate);
+pfIndex.rurl = decodeURIComponent(window.location.href).trim().replace(/\\/g, '/').replace(/\/$/g, '');
+pfIndex.tm = "";
+pfIndex.md = "";
+
+if (pfIndex.rurl.indexOf("/app/index.html?") === -1) {
+  pfIndex.template = pfConfig.defaultTemplate;
+  pfIndex.model = "default";
+} else {
+  pfIndex.query = pfIndex.rurl.substring(pfIndex.rurl.indexOf("?") + 1);
+  if (pfIndex.query.length < 1 || pfIndex.query.indexOf("___=") === -1) {
+    pfIndex.template = pfConfig.defaultTemplate;
+    pfIndex.model = "default";
+  } else if (pfIndex.query.indexOf("&") === -1 || pfIndex.query.indexOf("md=") === -1) {
+    pfIndex.template = pfIndex.query.substring(pfIndex.query.indexOf("___=") + 4);
+    pfIndex.template = planner.adaptTemplatePath(pfIndex.template);
+    pfIndex.model = "";
+  } else {
+    if (pfIndex.query.substr(0, 4) === "___=") {
+      pfIndex.template = pfIndex.query.substring(4, pfIndex.query.indexOf("&md="));
+      pfIndex.md = pfIndex.query.substring(pfIndex.query.indexOf("&md=") + 4);
+    } else if (pfIndex.query.substr(0, 3) === "md=") {
+      pfIndex.md = pfIndex.query.substring(3, pfIndex.query.indexOf("&___="));
+      pfIndex.template = pfIndex.query.substring(pfIndex.query.indexOf("&___=") + 5);      
+    }
+    pfIndex.template = planner.adaptTemplatePath(pfIndex.template);
+    if (pfIndex.md === "#") pfIndex.md = "";
+    pfIndex.md = encodeURIComponent(pfIndex.md);
+    
+    if (pfIndex.template.indexOf("~~") > 4) {
+      pfIndex.template = pfIndex.template.substring(0, pfIndex.template.indexOf("~~"));
+    }
+    if (pfIndex.template.indexOf("?tm=") !== -1) {
+      pfIndex.tm = pfIndex.template.substring(pfIndex.template.indexOf("?tm=")).replace(/&/g, "%26");
+      pfIndex.template = pfIndex.template.substring(0, pfIndex.template.indexOf("?tm="));
+    }
+    pfTemplate = planner.lexicrc32(pfIndex.template);
+    pfIndex.model = pfTemplate + pfIndex.template;
+  }
+}
+
+if (!pfTemplate) {
+  if (pfIndex.template.indexOf("~~") > 4) {
+    pfIndex.template = pfIndex.template.substring(0, pfIndex.template.indexOf("~~"));
+  }
+  if (pfIndex.template.indexOf("?tm=") !== -1) {
+    pfIndex.tm = pfIndex.template.substring(pfIndex.template.indexOf("?tm=")).replace(/&/g, "%26");
+    pfIndex.template = pfIndex.template.substring(0, pfIndex.template.indexOf("?tm="));
+  }
+  
+  pfTemplate = planner.lexicrc32(pfIndex.template);
+  if (pfIndex.model == "default") {
+    pfIndex.model = "";
+    if (pfConfig.defaultModeldata.length > 0) {
+      pfIndex.model = pfTemplate + pfIndex.template;
+      pfIndex.md = encodeURIComponent(pfConfig.defaultModeldata);
+    }
+  }
+}
+
+if (pfConfig.trackExecutedTime) {
+  planner.updateTrackTime(pfIndex.start);
+}
+
+if (pfIndex.model) {
+  planner.loadTemplate(pfConfig.environment, pfConfig.templateTimeout, pfConfig.templateGateway + "?___=" + pfIndex.template.replace(/&/g, "%26") + pfIndex.tm, pfProcess);
+  if (pfIndex.md.length > 0) {
+    planner.loadModelData(pfConfig.environment, pfConfig.modeldataTimeout, pfConfig.modeldataGateway + "?___=" + pfIndex.model.replace(/&/g, "%26") + "&md=" + pfIndex.md, "GET", pfProcess);
+  } else {
+    planner.loadModelData(pfConfig.environment, pfConfig.modeldataTimeout, pfConfig.modeldataGateway + "?___=" + pfIndex.model.replace(/&/g, "%26"), "GET", pfProcess);
+  }
+} else {
+  planner.loadTemplate(pfConfig.environment, pfConfig.templateTimeout, pfConfig.templateGateway + "?___=" + pfIndex.template.replace(/&/g, "%26") + pfIndex.tm, pfProcess, "WOMODEL");
+}
+
+/**
+ * Callback when template and modeldata loaded
+ * 
+ * @param {object} modeldata    modeldata to template function 
+ */
+function pfProcess(modeldata) {
+  if (pfConfig.trackExecutedTime) {
+    planner.updateTrackTime(pfIndex.start);
+  }
+  var html = "";
+  
+  if (typeof pfTemplateFailed !== "undefined" && pfTemplateFailed) {
+    pfTemplateFailed = null;
+    throw new Error("The controller can't load template");
+  } else if (modeldata.hasOwnProperty("modelDataFailed") && typeof modeldata.modelDataFailed === "string" && modeldata.modelDataFailed.length > 0) {
+    modeldata.modelDataFailed = "";
+    throw new Error("The controller can't load modeldata");
+  }
+  
+  if (typeof modeldata === "string" && modeldata == "WOMODEL") {
+    html = window[pfTemplate].run();
+  } else {
+    planner.checkModelData(modeldata);
+    modeldata = modeldata.pfDataSet[pfTemplate];
+    planner.validateSdjs(modeldata);
+    html = window[pfTemplate].run(modeldata);
+  }
+  
+  // rendering result page
+  document.open();
+  document.write(html);
+  document.close();
+  
+  if (pfConfig.trackExecutedTime) {
+    planner.updateTrackTime(pfIndex.start, true);
+    planner.errorHandler(3, planner.getElapsedDetailTime(pfIndex.start));
+  }
+  
+  pfTemplate = "";
+  pfIndex = null;
+}
+})();
+</script>
+
+<noscript>
+  <meta http-equiv="refresh" content="0; url=noscript.html">
+</noscript>
+</head>
+
+<body>
+<!--
+  The controller outputs error message to the screen or browser console
+-->
+</body>
+</html>
